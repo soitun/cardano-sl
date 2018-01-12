@@ -48,8 +48,8 @@ module Pos.Core.Txp
 
 import           Universum
 
-import           Control.Monad.Except (MonadError(throwError))
 import           Control.Lens (makeLenses, makePrisms)
+import           Control.Monad.Except (MonadError (throwError))
 import           Data.Hashable (Hashable)
 import qualified Data.Text.Buildable as Buildable
 import           Data.Vector (Vector)
@@ -62,7 +62,7 @@ import           Serokell.Util.Verify (VerificationRes (..), verResSingleF, veri
 import           Pos.Binary.Class (Bi)
 import           Pos.Binary.Core.Address ()
 import           Pos.Binary.Crypto ()
-import           Pos.Core.Common (Address (..), Coin (..), Script, addressHash, coinF, checkCoin)
+import           Pos.Core.Common (Address (..), Coin (..), Script, addressHash, checkCoin, coinF)
 import           Pos.Crypto (Hash, PublicKey, RedeemPublicKey, RedeemSignature, Signature, hash,
                              shortHashF)
 import           Pos.Data.Attributes (Attributes, areAttributesKnown)
@@ -94,7 +94,7 @@ data TxInWitness
     | RedeemWitness { twRedeemKey :: !RedeemPublicKey
                     , twRedeemSig :: !(RedeemSignature TxSigData) }
     | UnknownWitnessType !Word8 !ByteString
-    deriving (Eq, Show, Generic, Typeable)
+    deriving (Eq, Ord, Show, Generic, Typeable)
 
 instance Hashable TxInWitness
 
@@ -195,7 +195,7 @@ makeLenses ''Tx
 data TxAux = TxAux
     { taTx      :: !Tx
     , taWitness :: !TxWitness
-    } deriving (Generic, Show, Eq)
+    } deriving (Generic, Show, Eq, Ord)
 
 instance Hashable Tx
 
@@ -232,7 +232,7 @@ checkTx
 checkTx it =
     case verRes of
         VerSuccess -> pure ()
-        failure    -> throwError $ sformat verResSingleF failure
+        failure    -> throwError $ verResSingleF failure
   where
     verRes =
         verifyGeneric $

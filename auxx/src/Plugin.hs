@@ -14,10 +14,10 @@ import           Universum
 import           System.Exit (ExitCode (ExitSuccess))
 import           System.Posix.Process (exitImmediately)
 #endif
-import           Data.Constraint (Dict(..))
+import           Data.Constraint (Dict (..))
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import           Formatting (float, int, sformat, (%))
 import           Mockable (Delay, Mockable, delay)
-import           Serokell.Util (sec)
 import           System.IO (hFlush, stdout)
 import           System.Wlog (CanLog, HasLoggerName, logInfo)
 
@@ -33,6 +33,10 @@ import           Command (createCommandProcs)
 import qualified Lang
 import           Mode (MonadAuxxMode)
 import           Repl (PrintAction, WithCommandAction (..))
+
+-- TODO: remove after migration to o-clock
+sec :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 ----------------------------------------------------------------------------
 -- Plugin implementation
@@ -92,7 +96,7 @@ runWalletCmd mHasAuxxMode mDiffusion line = do
     liftIO $ exitImmediately ExitSuccess
 #endif
   where
-    printAction = putText
+    printAction = putTextLn
 
 runCmd ::
        ( HasCompileInfo

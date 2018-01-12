@@ -14,9 +14,9 @@ import           Control.Exception.Safe (handleAny)
 import           Control.Lens (to)
 import           Control.Monad.STM (retry)
 import qualified Data.List.NonEmpty as NE
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import           Formatting (build, int, sformat, (%))
 import           Mockable (delay)
-import           Serokell.Util (sec)
 import           System.Wlog (logDebug, logError, logInfo, logWarning)
 
 import           Pos.Block.BlockWorkMode (BlockWorkMode)
@@ -37,6 +37,10 @@ import           Pos.Reporting (reportOrLogE, reportOrLogW)
 import           Pos.Util.Chrono (NE, OldestFirst (..), _OldestFirst)
 import           Pos.Util.Util (HasLens (..))
 import           Pos.Worker.Types (WorkerSpec, worker)
+
+-- TODO: remove after migration to o-clock
+sec :: Integer -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 retrievalWorker
     :: forall ctx m.
@@ -292,7 +296,7 @@ getProcessBlocks diffusion nodeId desired checkpoints = do
           logDebug $ sformat
               ("Retrieved "%int%" blocks")
               (blocks ^. _OldestFirst . to NE.length)
-          handleBlocks nodeId blocks diffusion 
+          handleBlocks nodeId blocks diffusion
           -- If we've downloaded any block with bigger
           -- difficulty than ncRecoveryHeader, we're
           -- gracefully exiting recovery mode.

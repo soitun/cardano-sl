@@ -16,8 +16,8 @@ module Pos.Wallet.Web.Pending.Submission
 import           Universum
 
 import           Control.Exception.Safe (Handler (..), catches, onException)
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import           Formatting (build, sformat, shown, stext, (%))
-import           Serokell.Util (hour)
 import           System.Wlog (WithLogger, logDebug, logInfo)
 
 import           Pos.Client.Txp.History (saveTx, thTimestamp)
@@ -34,6 +34,10 @@ import           Pos.Wallet.Web.Pending.Types (PendingTx (..), PtxCondition (..)
 import           Pos.Wallet.Web.State (MonadWalletDB, PtxMetaUpdate (PtxMarkAcknowledged),
                                        addOnlyNewPendingTx, casPtxCondition, ptxUpdateMeta,
                                        removeOnlyCreatingPtx)
+
+-- TODO: remove after migration to 'o-clock'
+hour :: Int -> Microsecond
+hour = fromMicroseconds . fromIntegral . (*) 3600000000
 
 -- | Handers used for to procees various pending transaction submission
 -- errors.

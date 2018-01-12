@@ -11,10 +11,10 @@ import           Universum
 
 import           Control.Lens (ix)
 import qualified Data.List.NonEmpty as NE
-import           Data.Time.Units (Microsecond)
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import           Formatting (Format, bprint, build, fixed, int, now, sformat, shown, (%))
 import           Mockable (delay)
-import           Serokell.Util (enumerate, listJson, pairF, sec)
+import           Serokell.Util (enumerate, listJson, pairF)
 import qualified System.Metrics.Label as Label
 import           System.Random (randomRIO)
 import           System.Wlog (logDebug, logError, logInfo, logWarning)
@@ -60,6 +60,10 @@ import           Pos.Util.LogSafe (logDebugS, logInfoS, logWarningS)
 import           Pos.Util.TimeLimit (logWarningSWaitLinear)
 import           Pos.Util.TimeWarp (CanJsonLog (..))
 import           Pos.Worker.Types (Worker, WorkerSpec, onNewSlotWorker, worker)
+
+-- TODO: remove after migration to o-clock
+sec :: Integer -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 ----------------------------------------------------------------------------
 -- All workers

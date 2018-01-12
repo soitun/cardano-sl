@@ -33,16 +33,17 @@ module Pos.Wallet.Web.Methods.Misc
        , cancelOneApplyingPtx
        ) where
 
-import           Universum
+import           Universum hiding (id)
 
 import           Data.Aeson (encode)
 import           Data.Aeson.TH (defaultOptions, deriveJSON)
 import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as M
 import qualified Data.Text.Buildable
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import           Formatting (bprint, build, sformat, (%))
 import           Mockable (Delay, LowLevelAsync, Mockables, MonadMockable, async, delay)
-import           Serokell.Util (listJson, sec)
+import           Serokell.Util (listJson)
 import           Servant.API.ContentTypes (MimeRender (..), NoContent (..), OctetStream)
 import           System.Wlog (WithLogger)
 
@@ -121,6 +122,10 @@ applyUpdate = removeNextUpdate >> applyLastUpdate >> return NoContent
 ----------------------------------------------------------------------------
 -- System
 ----------------------------------------------------------------------------
+
+-- TODO: remove after migration to o-clock
+sec :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 -- | Triggers shutdown in a short interval after called. Delay is
 -- needed in order for http request to succeed.

@@ -35,8 +35,8 @@ import           Data.Time.Units (Microsecond)
 import           Formatting (int, sformat, shown, stext, (%))
 import           Mockable (CurrentTime, Delay, Mockable, Mockables, currentTime, delay)
 import           NTP.Client (NtpClientSettings (..), NtpMonad, ntpSingleShot, spawnNtpClient)
-import           Serokell.Util (sec)
 import           System.Wlog (WithLogger, logDebug, logInfo, logWarning)
+import qualified Time (Microsecond, sec, toNum)
 
 import           Pos.Core.Configuration (HasConfiguration)
 import           Pos.Core.Slotting (EpochIndex, SlotId (..), Timestamp (..), unflattenSlotId)
@@ -86,7 +86,7 @@ mkNtpSlottingVar = do
     res <- newTVarIO NtpSlottingState {..}
     -- We don't want to wait too much at the very beginning,
     -- 1 second should be enough.
-    let settings = (ntpSettings res) { ntpResponseTimeout = 1 & sec }
+    let settings = (ntpSettings res) { ntpResponseTimeout = Time.toNum @Time.Microsecond (Time.sec 1) }
     res <$ singleShot settings
   where
     singleShot settings = do

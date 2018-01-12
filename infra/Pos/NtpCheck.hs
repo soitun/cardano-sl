@@ -15,7 +15,8 @@ import qualified Data.List.NonEmpty as NE
 import           Data.Time.Units (Microsecond)
 import           Mockable (CurrentTime, Delay, Mockable, Mockables, currentTime, withAsync)
 import           NTP.Client (NtpClientSettings (..), NtpMonad, spawnNtpClient)
-import           Serokell.Util (sec)
+import           Time (sec, toNum)
+import qualified Time (Microsecond)
 
 import           Pos.Core.Slotting (Timestamp (..), diffTimestamp)
 import           Pos.Infra.Configuration (HasInfraConfiguration, infraConfiguration)
@@ -36,7 +37,7 @@ ntpSettings onStatus = NtpClientSettings
     { ntpServers         = Infra.ntpServers
     , ntpHandler         = ntpCheckHandler onStatus
     , ntpLogName         = "ntp-check"
-    , ntpResponseTimeout = sec 5
+    , ntpResponseTimeout = toNum @Time.Microsecond (sec 5)
     , ntpPollDelay       = timeDifferenceWarnInterval
     , ntpMeanSelection   = median . NE.fromList
     }

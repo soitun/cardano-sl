@@ -18,8 +18,7 @@ import           Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, gener
 import           Data.Reflection (Given (..), give)
 import           Serokell.Aeson.Options (defaultOptions)
 
-import           Data.Time.Units (Microsecond)
-import           Serokell.Util (sec)
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 
 type HasSscConfiguration = Given SscConfiguration
 
@@ -48,6 +47,10 @@ instance ToJSON SscConfiguration where
 ----------------------------------------------------------------------------
 -- Constants
 ----------------------------------------------------------------------------
+
+-- TODO: remove after migration to o-clock
+sec :: Integer -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 -- | Length of interval during which node should send her MPC message.
 mpcSendInterval :: HasSscConfiguration => Microsecond

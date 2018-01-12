@@ -23,9 +23,8 @@ import           Universum
 
 import           Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import           Data.Reflection (Given (..), give)
-import           Data.Time.Units (Microsecond, Second)
+import           Data.Time.Units (Microsecond, Second, fromMicroseconds)
 import           Serokell.Aeson.Options (defaultOptions)
-import           Serokell.Util (ms)
 
 type HasNodeConfiguration = Given NodeConfiguration
 
@@ -63,6 +62,10 @@ instance FromJSON NodeConfiguration where
 ----------------------------------------------------------------------------
 -- Miscellaneous constants
 ----------------------------------------------------------------------------
+
+-- TODO: remove after migration to o-clock
+ms :: Integer -> Microsecond
+ms = fromMicroseconds . fromIntegral . (*) 1000
 
 networkConnectionTimeout :: HasNodeConfiguration => Microsecond
 networkConnectionTimeout = ms . fromIntegral . ccNetworkConnectionTimeout $ nodeConfiguration

@@ -21,9 +21,9 @@ module Pos.Client.CLI.Options
 import           Universum
 
 import           Data.Default (def)
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import qualified Options.Applicative as Opt
 import           Options.Applicative.Builder.Internal (HasMetavar, HasName)
-import           Serokell.Util (sec)
 import           Serokell.Util.OptParse (fromParsec)
 
 import           Pos.Binary.Core ()
@@ -49,6 +49,10 @@ commonArgsParser = do
     updateServers <- updateServersOption
     configurationOptions <- configurationOptionsParser
     pure CommonArgs{..}
+
+-- TODO: remove after migration to o-clock
+sec :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 -- Note: if you want to change names of these options, please also
 -- update cardano-launcher accordingly (grep for these names).
@@ -125,7 +129,6 @@ portOption portNum =
 reportServersOption :: Opt.Parser [Text]
 reportServersOption =
     many $
-    toText <$>
     Opt.strOption
         (templateParser
              "report-server"
@@ -135,7 +138,6 @@ reportServersOption =
 updateServersOption :: Opt.Parser [Text]
 updateServersOption =
     many $
-    toText <$>
     Opt.strOption
         (templateParser "update-server" "URI" "Server to download updates from.")
 

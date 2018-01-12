@@ -23,6 +23,7 @@ module Pos.Wallet.Web.Tracking.Modifier
 import           Universum
 
 import           Data.DList (DList)
+import qualified Data.Foldable as Foldable (toList)
 import qualified Data.Text.Buildable
 import           Data.Text.Lazy.Builder (Builder)
 import           Formatting (bprint, build, (%))
@@ -100,10 +101,10 @@ buildCAccModifier sl CAccModifier{..} =
     (map (fst . fst) $ MM.insertions camUsed)
     (map (fst . fst) $ MM.insertions camChange)
     camUtxo
-    camAddedHistory
-    camDeletedHistory
-    (map fst camAddedPtxCandidates)
-    (map fst camDeletedPtxCandidates)
+    (Foldable.toList camAddedHistory)
+    (Foldable.toList camDeletedHistory)
+    (Foldable.toList $ map fst camAddedPtxCandidates)
+    (Foldable.toList $ map fst camDeletedPtxCandidates)
 
 instance Buildable CAccModifier where
     build = buildCAccModifier unsecure
@@ -168,7 +169,7 @@ deleteAndInsertMM dels ins mapModifier =
     -- Delete CWAddressMeta coressponding to inputs of tx (1)
     foldl' deleteAcc mapModifier dels
   where
-    insertAcc :: (Hashable k, Eq k) => MapModifier k v -> (k, v) -> MapModifier k v
+    insertAcc :: (Hashable k, Eq k) =>  MapModifier k v -> (k, v) ->MapModifier k v
     insertAcc modifier (k, v) = MM.insert k v modifier
 
     deleteAcc :: (Hashable k, Eq k) => MapModifier k v -> k -> MapModifier k v

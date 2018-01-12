@@ -29,9 +29,10 @@ import           Universum
 import           Data.Time.Units (Millisecond)
 import           Formatting (int, sformat, shown, stext, (%))
 import           Mockable (Async, Delay, Mockable, delay, timeout)
-import           Serokell.Util (sec)
 import           System.Wlog (WithLogger, logDebug, logInfo, logNotice, logWarning,
                               modifyLoggerName)
+import           Time (sec, toNum)
+import qualified Time (Microsecond)
 
 import           Pos.Core (FlatSlotId, HasConfiguration, LocalSlotIndex, SlotId (..),
                            Timestamp (..), flattenSlotId, slotIdF)
@@ -254,5 +255,5 @@ waitSystemStart = do
     let Timestamp waitPeriod = start - cur
     when (cur < start) $ do
         logInfo $ sformat ("Waiting "%int%" seconds for system start") $
-            waitPeriod `div` sec 1
+            waitPeriod `div` toNum @Time.Microsecond (sec 1)
         delay waitPeriod

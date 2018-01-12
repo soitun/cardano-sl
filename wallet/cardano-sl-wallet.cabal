@@ -134,6 +134,7 @@ library
                       , memory
                       , monad-control
                       , mtl
+                      , o-clock
                       , quickcheck-instances
                       , random
                       , reflection
@@ -252,11 +253,6 @@ executable cardano-node
   build-tools: cpphs >= 1.19
   ghc-options: -pgmP cpphs -optP --cpp
 
-  -- linker speed up for linux
-  if os(linux)
-    ghc-options:       -optl-fuse-ld=gold
-    ld-options:        -fuse-ld=gold
-
   default-extensions:   DeriveDataTypeable
                         DeriveGeneric
                         GeneralizedNewtypeDeriving
@@ -308,11 +304,6 @@ executable cardano-swagger
                        -Wall
                        -fno-warn-orphans
                        -O2
-
-  -- linker speed up for linux
-  if os(linux)
-    ghc-options:       -optl-fuse-ld=gold
-    ld-options:        -fuse-ld=gold
 
   default-extensions:   BangPatterns
                         FlexibleContexts
@@ -390,11 +381,6 @@ test-suite cardano-wallet-test
                        -rtsopts
                        -Wall
                        -fno-warn-orphans
-
-  -- linker speed up for linux
-  if os(linux)
-    ghc-options:       -optl-fuse-ld=gold
-    ld-options:        -fuse-ld=gold
 
   default-extensions:   DeriveDataTypeable
                         DeriveGeneric

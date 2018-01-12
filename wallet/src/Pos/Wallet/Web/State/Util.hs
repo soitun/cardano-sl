@@ -7,11 +7,10 @@ module Pos.Wallet.Web.State.Util
 import           Universum
 
 import           Data.Acid (createArchive, createCheckpoint)
-import           Data.Time.Units (TimeUnit)
+import           Data.Time.Units (Microsecond, TimeUnit (..))
 import           Formatting (sformat, shown, (%))
 import           Mockable (Delay, Mockable, delay)
-import           Serokell.AcidState (ExtendedState (..), extendedStateToAcid)
-import           Serokell.Util (sec)
+import           Serokell.AcidState.ExtendedState (ExtendedState (..), extendedStateToAcid)
 import           System.Directory (getModificationTime, listDirectory, removeFile)
 import           System.FilePath ((</>))
 import           System.Wlog (WithLogger, logDebug, logError)
@@ -26,6 +25,9 @@ type MonadAcidCleanup ctx m =
     , Mockable Delay m
     )
 
+-- TODO: remove after migration to o-clock
+sec :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 -- | This worker does acid cleanup action every (passed)
 -- interval. Action itself consists of two steps:

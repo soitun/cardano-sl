@@ -4,9 +4,9 @@ module Pos.Slotting.Configuration
        , ntpResponseTimeout
        ) where
 
-import           Data.Time.Units (Microsecond)
-import           Serokell.Util (mcs)
 import           Universum
+
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 
 import           Pos.Infra.Configuration (HasInfraConfiguration, ccNtpMaxError, ccNtpPollDelay,
                                           ccNtpResponseTimeout, infraConfiguration)
@@ -14,6 +14,10 @@ import           Pos.Infra.Configuration (HasInfraConfiguration, ccNtpMaxError, 
 ----------------------------------------------------------------------------
 -- NTP
 ----------------------------------------------------------------------------
+
+-- TODO: remove after migration to o-clock
+mcs :: Int -> Microsecond
+mcs = fromMicroseconds . fromIntegral
 
 -- | Inaccuracy in call threadDelay (actually this error is much less than 1 sec)
 ntpMaxError :: HasInfraConfiguration => Microsecond

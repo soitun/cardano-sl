@@ -16,7 +16,6 @@ module Pos.DHT.Real.Real
        ) where
 
 
-import           Nub (ordNub)
 import           Universum
 
 import           Control.Exception.Safe (try)
@@ -29,10 +28,11 @@ import           Mockable (Delay, Mockable, MonadMockable, delay, withAsync)
 import qualified Network.Kademlia as K
 import qualified Network.Kademlia.Instance as K (KademliaInstance (state), KademliaState (sTree))
 import qualified Network.Kademlia.Tree as K (toView)
-import           Serokell.Util (listJson, ms, sec)
+import           Serokell.Util (listJson)
 import           System.Directory (doesFileExist)
 import           System.Wlog (HasLoggerName (modifyLoggerName), WithLogger, logDebug, logError,
                               logInfo, logWarning, usingLoggerName)
+import           Time (Microsecond, ms, sec, toNum)
 
 import           Pos.Binary.Class (Bi (..), decodeFull)
 import           Pos.Binary.Infra.DHTModel ()
@@ -63,7 +63,7 @@ foreverRejoinNetwork
     -> m a
     -> m a
 foreverRejoinNetwork inst action = withAsync
-    (runWithRandomIntervals (ms 500) (sec 5) (rejoinNetwork inst))
+    (runWithRandomIntervals (toNum @Microsecond (ms 500)) (toNum @Microsecond (sec 5)) (rejoinNetwork inst))
     (const action)
 
 -- | Stop chosen 'KademliaDHTInstance'.
@@ -133,13 +133,13 @@ rejoinNetwork
     => KademliaDHTInstance
     -> m ()
 rejoinNetwork inst = withKademliaLogger $ do
-    let init = kdiInitialPeers inst
+    let initialPeers = kdiInitialPeers inst
     peers <- atomically $ kademliaGetKnownPeers inst
     logDebug $ sformat ("rejoinNetwork: peers "%listJson) peers
     when (length peers < neighborsSendThreshold) $ do
         logWarning $ sformat ("Not enough peers: "%int%", threshold is "%int)
                              (length peers) (neighborsSendThreshold :: Int)
-        kademliaJoinNetworkNoThrow inst init
+        kademliaJoinNetworkNoThrow inst initialPeers
 
 withKademliaLogger
     :: ( HasLoggerName m )

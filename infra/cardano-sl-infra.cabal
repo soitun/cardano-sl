@@ -170,6 +170,7 @@ library
                       , network-info
                       , network-transport
                       , network-transport-tcp
+                      , o-clock
                       , optparse-applicative
                       , QuickCheck
                       , reflection

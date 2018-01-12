@@ -19,10 +19,13 @@ import           Universum
 import           Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON,
                              withObject, (.:), (.:?))
 import           Data.Default (Default (..))
+import           Data.Time.Units (Microsecond, fromMicroseconds)
 import           Serokell.Aeson.Options (defaultOptions)
-import           Serokell.Util (sec)
 import           System.FilePath (takeDirectory)
 import           System.Wlog (WithLogger, logInfo)
+import qualified Text.JSON.Canonical as Canonical
+
+import           Pos.Core.Genesis (GenesisData, SchemaError)
 
 -- FIXME consistency on the locus of the JSON instances for configuration.
 -- Core keeps them separate, infra update and ssc define them on-site.
@@ -82,6 +85,10 @@ data ConfigurationOptions = ConfigurationOptions
     , cfoSeed        :: !(Maybe Integer)
     } deriving (Show)
 
+-- TODO: remove after migration to o-clock
+sec :: Integer -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
+
 instance FromJSON ConfigurationOptions where
     parseJSON = withObject "ConfigurationOptions" $ \o -> do
         cfoFilePath    <- o .: "filePath"
@@ -104,7 +111,11 @@ instance Default ConfigurationOptions where
 -- | Parse some big yaml file to 'MultiConfiguration' and then use the
 -- configuration at a given key.
 withConfigurations
-    :: (WithLogger m, MonadThrow m, MonadIO m)
+    :: ( WithLogger m
+       , MonadThrow m
+       , MonadIO m
+       , Canonical.FromJSON (Either SchemaError) GenesisData
+       )
     => ConfigurationOptions
     -> (HasConfigurations => m r)
     -> m r

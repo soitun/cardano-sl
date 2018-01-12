@@ -22,11 +22,10 @@ import           Data.List ((!!))
 import qualified Data.List.NonEmpty as NE
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
-import           Data.Time.Units (toMicroseconds)
+import           Data.Time.Units (TimeUnit (..), Microsecond)
 import           Formatting (build, int, sformat, shown, stext, (%))
 import           Mockable (Mockable, SharedAtomic, SharedAtomicT, concurrently, currentTime, delay,
                            forConcurrently, modifySharedAtomic, newSharedAtomic)
-import           Serokell.Util (ms, sec)
 import           System.IO (BufferMode (LineBuffering), hClose, hSetBuffering)
 import           System.Wlog (logError, logInfo)
 
@@ -46,6 +45,11 @@ import           Pos.Util.UserSecret (usWallet, userSecret, wusRootKey)
 import           Pos.Util.Util (maybeThrow)
 
 import           Mode (MonadAuxxMode, makePubKeyAddressAuxx)
+
+-- TODO: remove after migration to o-clock
+sec, ms :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
+ms  = fromMicroseconds . fromIntegral . (*) 1000
 
 ----------------------------------------------------------------------------
 -- Send to all genesis

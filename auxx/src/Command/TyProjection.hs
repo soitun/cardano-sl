@@ -31,9 +31,8 @@ module Command.TyProjection
 import           Universum
 
 import           Data.Scientific (Scientific, floatingOrInteger, toBoundedInteger, toRealFloat)
-import           Data.Time.Units (TimeUnit, convertUnit)
+import           Data.Time.Units (TimeUnit (..), convertUnit, Microsecond)
 import           Serokell.Data.Memory.Units (Byte, fromBytes)
-import           Serokell.Util (sec)
 
 import           Pos.Core (AddrStakeDistribution (..), Address, BlockVersion, Coin,
                            CoinPortion, EpochIndex, ScriptVersion, SoftwareVersion, StakeholderId,
@@ -92,6 +91,10 @@ tyByte = fromBytes <$> TyProjection "Byte" (sciToInteger <=< preview _ValueNumbe
 
 sciToInteger :: Scientific -> Maybe Integer
 sciToInteger = either (const Nothing) Just . floatingOrInteger @Double @Integer
+
+-- TODO: remove after migration to o-clock
+sec :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 tySecond :: TimeUnit a => TyProjection a
 tySecond = convertUnit . sec <$> TyProjection "Second" (toBoundedInteger <=< preview _ValueNumber)

@@ -28,9 +28,8 @@ import           Universum
 
 import           Data.Aeson (FromJSON (..), ToJSON (..), genericParseJSON, genericToJSON)
 import           Data.Reflection (Given (..), give)
-import           Data.Time.Units (Microsecond, Second, convertUnit)
+import           Data.Time.Units (Microsecond, Second, convertUnit, fromMicroseconds)
 import           Serokell.Aeson.Options (defaultOptions)
-import           Serokell.Util (sec)
 
 import           Pos.Aeson.Core ()
 
@@ -81,6 +80,10 @@ instance FromJSON BlockConfiguration where
 ----------------------------------------------------------------------------
 -- Main constants mentioned in paper
 ----------------------------------------------------------------------------
+
+-- TODO: remove after migration to o-clock
+sec :: Int -> Microsecond
+sec = fromMicroseconds . fromIntegral . (*) 1000000
 
 -- | Estimated time needed to broadcast message from one node to all
 -- other nodes. Also see 'Pos.NodeConfiguration.ccNetworkDiameter'.

@@ -8,8 +8,8 @@ import           Universum
 
 import           Control.Lens ((%=))
 import           Data.Time.Clock (UTCTime, addUTCTime)
+import           Data.Time.Units (Microsecond)
 import           Mockable (CurrentTime, Delay, Mockable, currentTime, delay)
-import           Serokell.Util (sec)
 
 import           Pos.Communication.Protocol (OutSpecs)
 import           Pos.Delegation.Class (MonadDelegation, dwMessageCache)
@@ -51,7 +51,7 @@ dlgInvalidateCaches =
     fix $ \loop -> do
         -- REPORT:ERROR 'reportOrLogE' in delegation worker.
         invalidate `catchAny` reportOrLogE "Delegation worker, error occurred: "
-        delay (sec 1)
+        delay (10 ^ (6 :: Int) :: Microsecond) -- 1 second; TODO: refactor after migration to o-clock
         loop
   where
     invalidate = do
