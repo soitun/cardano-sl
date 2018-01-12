@@ -53,16 +53,15 @@ import           Pos.Wallet.Web.ClientTypes (AccountId (..), CAccount (..),
                                              CWalletMeta (..), Wal, addrMetaToAccount,
                                              encToCId, mkCCoin)
 import           Pos.Wallet.Web.Error       (WalletError (..))
-import           Pos.Wallet.Web.Mode        (MonadWalletWebMode, convertCIdTOAddr)
+import           Pos.Wallet.Web.Mode        (MonadWalletWebMode, convertCIdToAddr)
 import           Pos.Wallet.Web.State       (AddressInfo (..),
                                              AddressLookupMode (Existing),
                                              CustomAddressType (ChangeAddr, UsedAddr),
-                                             WalletSnapshot, addWAddress, askWalletDB,
-                                             askWalletSnapshot,
-                                             createWallet, createAccountWithAddress,
-                                             doesAccountExist,
-                                             getAccountIds, getWalletAddresses,
-                                             getWalletBalancesAndUtxo,
+                                             WalletSnapshot, WalletSnapshot, addWAddress,
+                                             askWalletDB, askWalletSnapshot,
+                                             createAccountWithAddress, createWallet,
+                                             doesAccountExist, getAccountIds,
+                                             getWalletAddresses, getWalletBalancesAndUtxo,
                                              getWalletMetaIncludeUnready, getWalletPassLU,
                                              getWalletSnapshot, isCustomAddress,
                                              removeAccount, removeWallet, setAccountMeta,
@@ -97,7 +96,7 @@ getWAddressBalanceWithMod
     -> m Coin
 getWAddressBalanceWithMod ws accMod addr =
     getBalanceWithMod ws accMod
-        <$> convertCIdTOAddr (cwamId addr)
+        <$> convertCIdToAddr (cwamId addr)
 
 -- BE CAREFUL: this function has complexity O(number of used and change addresses)
 getWAddress
