@@ -92,6 +92,7 @@ module Pos.Wallet.Web.State.Storage
 
 import           Universum
 
+import           Control.Arrow                   ((***))
 import           Control.Lens                    (at, ix, lens, makeClassy, makeLenses,
                                                   non', to, toListOf, traversed, (%=),
                                                   (+=), (.=), (<<.=), (?=), _Empty, _head)
@@ -684,7 +685,7 @@ deriveSafeCopySimple 3 'extension ''WalletStorage
 unsafeCIdToAddress :: WebTypes.CId WebTypes.Addr -> Address
 unsafeCIdToAddress cId = case WebTypes.cIdToAddress cId of
     Left err -> error $ "unsafeCIdToAddress: " <> err
-    Right x -> x
+    Right x  -> x
 
 instance Migrate AddressInfo where
     type MigrateFrom AddressInfo = AddressInfo_v0
@@ -707,8 +708,7 @@ instance Migrate AccountInfo where
       where
         mapAddrs =
             HM.fromList
-          . fmap
-            (\(k, v) -> (unsafeCIdToAddress k, migrate v))
+          . fmap (unsafeCIdToAddress *** migrate)
           . HM.toList
 
 instance Migrate WalletStorage_v1 where
