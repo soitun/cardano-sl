@@ -25,6 +25,8 @@ import           Pos.Core.Configuration       (genesisHdwSecretKeys)
 import           Pos.Crypto                   (EncryptedSecretKey, PassPhrase,
                                                emptyPassphrase, firstHardened)
 import           Pos.StateLock                (Priority (..), withStateLockNoMetrics)
+import           Pos.Txp                      (getLocalTxs, getLocalUndos,
+                                               withTxpLocalData)
 import           Pos.Util                     (maybeThrow)
 import           Pos.Util.UserSecret          (UserSecretDecodingError (..),
                                                readUserSecret, usWalletSet)
@@ -41,10 +43,10 @@ import           Pos.Wallet.Web.Mode          (MonadWalletWebMode)
 import           Pos.Wallet.Web.Secret        (WalletUserSecret (..),
                                                mkGenesisWalletUserSecret, wusAccounts,
                                                wusWalletName)
-import           Pos.Wallet.Web.State         (askWalletDB, askWalletSnapshot, createAccount,
-                                               removeHistoryCache, setWalletSyncTip)
+import           Pos.Wallet.Web.State         (askWalletDB, askWalletSnapshot,
+                                               createAccount, removeHistoryCache,
+                                               setWalletSyncTip)
 import           Pos.Wallet.Web.Tracking      (syncWalletOnImport)
-
 
 -- | Which index to use to create initial account and address on new wallet
 -- creation
@@ -71,7 +73,6 @@ newWalletFromBackupPhrase passphrase CWalletInit {..} isReady = do
 
 newWallet :: MonadWalletWebMode m => PassPhrase -> CWalletInit -> m CWallet
 newWallet passphrase cwInit = do
-    -- XXX Transaction
     db <- askWalletDB
     -- A brand new wallet doesn't need any syncing, so we mark isReady=True
     (_, wId) <- newWalletFromBackupPhrase passphrase cwInit True
@@ -115,6 +116,9 @@ importWalletSecret
     -> WalletUserSecret
     -> m CWallet
 importWalletSecret passphrase WalletUserSecret{..} = do
+    mps <- withTxpLocalData $ \txpData -> (,)
+         <$> getLocalTxs txpData
+         <*> getLocalUndos txpData
     let key    = _wusRootKey
         wid    = encToCId key
         wMeta  = def { cwName = _wusWalletName }
@@ -123,7 +127,6 @@ importWalletSecret passphrase WalletUserSecret{..} = do
     -- Hence we mark the wallet as "not ready" until `syncWalletOnImport` completes.
     importedWallet <- L.createWalletSafe wid wMeta False
 
-    -- XXX Transaction
     db <- askWalletDB
     for_ _wusAccounts $ \(walletIndex, walletName) -> do
         let accMeta = def{ caName = walletName }
@@ -135,7 +138,7 @@ importWalletSecret passphrase WalletUserSecret{..} = do
     for_ _wusAddrs $ \(walletIndex, accountIndex) -> do
         let accId = AccountId wid walletIndex
         ws <- askWalletSnapshot
-        L.newAddress ws (DeterminedSeed accountIndex) passphrase accId
+        L.newAddress ws mps (DeterminedSeed accountIndex) passphrase accId
 
     -- `syncWalletOnImport` automatically marks a wallet as "ready".
     void $ syncWalletOnImport key

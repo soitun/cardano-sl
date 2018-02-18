@@ -74,11 +74,10 @@ import           Pos.Slotting                     (MonadSlots (..), MonadSlotsDa
 import           Pos.StateLock                    (Priority (..), StateLock,
                                                    withStateLockNoMetrics)
 import           Pos.Txp                          (GenesisUtxo (..), Tx (..), TxAux (..),
-                                                   TxIn (..), TxOut, TxOutAux (..),
-                                                   TxUndo, flattenTxPayload, genesisUtxo,
-                                                   toaOut, topsortTxs, txOutAddress,
-                                                   utxoToModifier)
-import           Pos.Txp.MemState.Class           (MonadTxpMem, getLocalTxsNUndo)
+                                                   TxId, TxIn (..), TxOut, TxOutAux (..),
+                                                   TxUndo, UndoMap, flattenTxPayload,
+                                                   genesisUtxo, toaOut, topsortTxs,
+                                                   txOutAddress, utxoToModifier)
 import           Pos.Util.Chrono                  (getNewestFirst)
 import qualified Pos.Util.Modifier                as MM
 import           Pos.Util.Servant                 (encodeCType)
@@ -113,7 +112,6 @@ type BlockLockMode ssc ctx m =
 
 type WalletTrackingEnv ext ctx m =
      ( BlockLockMode WalletSscType ctx m
-     , MonadTxpMem ext ctx m
      , WS.WalletDbReader ctx m
      , MonadSlotsData ctx m
      , WithLogger m
@@ -124,14 +122,16 @@ syncWalletOnImport :: WalletTrackingEnv ext ctx m => EncryptedSecretKey -> m ()
 syncWalletOnImport = syncWalletsWithGState @WalletSscType . one
 
 txMempoolToModifier :: WalletTrackingEnv ext ctx m
-                    => WalletSnapshot -> EncryptedSecretKey -> m CAccModifier
-txMempoolToModifier ws encSK = do
+                    => WalletSnapshot
+                    -> ([(TxId, TxAux)], UndoMap) -- ^ Transactions and UndoMap from mempool
+                    -> EncryptedSecretKey
+                    -> m CAccModifier
+txMempoolToModifier ws (txs, undoMap) encSK = do
     let wHash (i, TxAux {..}, _) = WithHash taTx i
         wId = encToCId encSK
         getDiff       = const Nothing  -- no difficulty (mempool txs)
         getTs         = const Nothing  -- don't give any timestamp
         getPtxBlkInfo = const Nothing  -- no slot of containing block
-    (txs, undoMap) <- getLocalTxsNUndo
 
     txsWUndo <- forM txs $ \(id, tx) -> case HM.lookup id undoMap of
         Just undo -> pure (id, tx, undo)
@@ -433,21 +433,24 @@ applyModifierToWallet
 applyModifierToWallet db wid newTip CAccModifier{..} = do
     -- TODO maybe do it as one acid-state transaction.
     -- XXX Transaction
-    mapM_ (WS.addWAddress db) (sortedInsertions camAddresses)
-    mapM_ (WS.addCustomAddress db UsedAddr . fst) (MM.insertions camUsed)
-    mapM_ (WS.addCustomAddress db ChangeAddr . fst) (MM.insertions camChange)
-    WS.updateWalletBalancesAndUtxo db camUtxo
-    let cMetas = M.fromList
-               $ mapMaybe (\THEntry {..} -> (\mts -> (_thTxId, CTxMeta . timestampToPosix $ mts)) <$> _thTimestamp)
+
+    let cMetas = mapMaybe (\THEntry {..} -> (\mts -> (encodeCType _thTxId
+                                                     , CTxMeta . timestampToPosix $ mts)
+                                            ) <$> _thTimestamp)
                $ DL.toList camAddedHistory
-    WS.addOnlyNewTxMetas db wid cMetas
-    let addedHistory = txHistoryListToMap $ DL.toList camAddedHistory
-    WS.insertIntoHistoryCache db wid addedHistory
-    -- resubmitting worker can change ptx in db nonatomically, but
-    -- tracker has priority over the resubmiter, thus do not use CAS here
-    forM_ camAddedPtxCandidates $ \(txid, ptxBlkInfo) ->
-        WS.setPtxCondition db wid txid (PtxInNewestBlocks ptxBlkInfo)
-    WS.setWalletSyncTip db wid newTip
+
+    WS.applyModifierToWallet
+      db
+      wid
+      (sortedInsertions camAddresses)
+      [ (UsedAddr, fst <$> MM.insertions camUsed)
+      , (ChangeAddr, fst <$> MM.insertions camChange)
+      ]
+      camUtxo
+      cMetas
+      (txHistoryListToMap $ DL.toList camAddedHistory)
+      (DL.toList $ second PtxInNewestBlocks <$> camAddedPtxCandidates)
+      newTip
 
 rollbackModifierFromWallet
     :: ( MonadSlots ctx m
@@ -459,20 +462,22 @@ rollbackModifierFromWallet
     -> CAccModifier
     -> m ()
 rollbackModifierFromWallet db wid newTip CAccModifier{..} = do
-    -- TODO maybe do it as one acid-state transaction.
-    -- XXX Transaction
-    mapM_ (WS.removeWAddress db) (indexedDeletions camAddresses)
-    mapM_ (WS.removeCustomAddress db UsedAddr) (MM.deletions camUsed)
-    mapM_ (WS.removeCustomAddress db ChangeAddr) (MM.deletions camChange)
-    WS.updateWalletBalancesAndUtxo db camUtxo
-    forM_ camDeletedPtxCandidates $ \(txid, poolInfo) -> do
-        curSlot <- getCurrentSlotInaccurate
-        WS.ptxUpdateMeta db wid txid (WS.PtxResetSubmitTiming curSlot)
-        WS.setPtxCondition db wid txid (PtxApplying poolInfo)
-        let deletedHistory = txHistoryListToMap (DL.toList camDeletedHistory)
-        WS.removeFromHistoryCache db wid deletedHistory
-        WS.removeWalletTxMetas db wid (map encodeCType $ M.keys deletedHistory)
-    WS.setWalletSyncTip db wid newTip
+    curSlot <- getCurrentSlotInaccurate
+
+    WS.rollbackModifierFromWallet
+      db
+      wid
+      (indexedDeletions camAddresses)
+      [ (UsedAddr, MM.deletions camUsed)
+      , (ChangeAddr, MM.deletions camChange)
+      ]
+      camUtxo
+      (txHistoryListToMap (DL.toList camDeletedHistory))
+      ((\(txId, poolInfo) -> ( txId, PtxApplying poolInfo
+                             , WS.PtxResetSubmitTiming curSlot))
+        <$> DL.toList camDeletedPtxCandidates
+      )
+      newTip
 
 evalChange
     :: [CWAddressMeta] -- ^ All adresses
