@@ -50,7 +50,7 @@ library
                      , cborg
                      , cereal
                      , concurrent-extra
-                     , conduit-combinators
+                     , conduit
                      , containers
                      , cryptonite
                      , data-default
@@ -90,6 +90,7 @@ library
                      , transformers-base
                      , transformers-lift
                      , universum
+                     , unliftio-core
                      , unordered-containers
                      , vector
 

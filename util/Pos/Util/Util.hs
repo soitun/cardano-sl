@@ -73,7 +73,7 @@ module Pos.Util.Util
 import           Universum
 
 import qualified Codec.CBOR.Decoding as CBOR
-import           Conduit (Conduit, (.|))
+import           Conduit (ConduitT, (.|))
 import qualified Conduit as C
 import           Control.Concurrent (threadDelay)
 import qualified Control.Exception.Safe as E
@@ -325,8 +325,8 @@ bracketWithLogging msg acquire release = bracket acquire release . addLogging
 --
 -- Like 'C.conduitVector', but creates non-empty lists instead of vectors.
 splitC
-    :: forall a m base. (C.MonadBase base m, PrimMonad base)
-    => Int -> Conduit a m (NonEmpty a)
+    :: forall a m . (PrimMonad m)
+    => Int -> ConduitT a (NonEmpty a) m ()
 splitC n = C.conduitVector n .| C.concatMapC (nonEmpty . toList @(Vector a))
 
 ----------------------------------------------------------------------------
