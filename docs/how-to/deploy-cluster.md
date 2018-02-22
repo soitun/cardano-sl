@@ -38,14 +38,14 @@ To attach to this session when you reconnect to `staging` server, you can use `t
 
 ### Deployment and recommendations
 The next steps are described [here](https://github.com/input-output-hk/internal-documentation/wiki/Developer-clusters-HOWTO).
-Some notes about this instruction:
+Some notes and recommendations about this instruction:
 * `cardano-sl` git revision is most likely HEAD commit of your branch
-* it's better to ask DevOps which `iohk-ops` branch you should use before deploy
-* it's better specify `--bump-system-start-held-by` option for `io deploy`. 
+* Ask DevOps which `iohk-ops` branch you should use before deploy.
+* Specify `--bump-system-start-held-by` option for `io deploy`. 
 The passed value depends on how long will deployment take: 
 if `cardano-sl` is compiling from scratch, then it probably should be 15-20 mins, otherwise it's enough 5-10 mins. 
 If deploy won't be done utill system start then the first slots will be without blocks and system most probably will die.
-* it's better to obtain logs from one of node after you deployed the system to make sure deployment was successful.
+* Obtain logs from one of node after you deployed the system to make sure deployment was successful.
 
 ## How to prepare installers
 
