@@ -39,7 +39,7 @@ import           Pos.Core                     (Address, Coin, mkCoin, sumCoins,
                                                unsafeIntegerToCoin)
 import           Pos.Crypto                   (PassPhrase, changeEncPassphrase,
                                                checkPassMatches, emptyPassphrase)
-import           Pos.Txp                      (applyUtxoModToAddrCoinMap, Utxo)
+import           Pos.Txp                      (applyUtxoModToAddrCoinMap, Utxo, AddrCoinMap)
 import           Pos.Util                     (maybeThrow)
 import qualified Pos.Util.Modifier            as MM
 import           Pos.Util.Servant             (encodeCType)
@@ -152,7 +152,8 @@ getAccountsIncludeUnready includeUnready mCAddr = do
                         accIds <&> \acc -> (aiWId acc, [acc])
     logInfo $ sformat ("getAccountsIncludeUnready: Grouped AccountId(s) " % shown) groupedAccIds
     balAndUtxo <- WS.getWalletBalancesAndUtxo
-    logInfo $ sformat ("getAccountsIncludeUnready: " % stext) (renderUtxo . snd $ balAndUtxo)
+    logInfo $ sformat ("getAccountsIncludeUnready: " % stext) (renderUtxo    . snd $ balAndUtxo)
+    logInfo $ sformat ("getAccountsIncludeUnready: " % stext) (renderBalance . fst $ balAndUtxo)
     cAccounts <- concatForM (HM.toList groupedAccIds) $ \(wid, walAccIds) ->
                      fixCachedAccModifierFor wid $ \accMod ->
                          mapM (getAccountMod balAndUtxo accMod) walAccIds
@@ -163,6 +164,10 @@ getAccountsIncludeUnready includeUnready mCAddr = do
         -- TODO No WALLET with id ...
         -- dunno whether I can fix and not break compatible w/ daedalus
         sformat ("No account with id "%build%" found") cAddr
+
+    renderBalance :: AddrCoinMap -> Text
+    renderBalance coinMap =
+        sformat ("Entries in the AddrCoinMap: " % int) (HM.size coinMap)
 
     renderUtxo :: Utxo -> Text
     renderUtxo utxo =
