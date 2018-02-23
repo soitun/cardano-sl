@@ -1,4 +1,4 @@
-# How to deploy cluster, prepare installers, propose an update
+# How to deploy cluster, prepare installers
 
 ## Table of contents
   * [How to deploy developer cluster](#how-to-deploy-developer-cluster)
@@ -10,6 +10,7 @@
     + [Which parts Daedalus consists of](#which-parts-daedalus-consists-of)
     + [How to build installers](#how-to-build-installers)
     + [How to downloand installers](#how-to-download-installers)
+    + [Recommendations and hacks](#recommendations-and-hacks)
 
 ## How to deploy developer cluster
 
@@ -171,3 +172,11 @@ Installer for MacOS can be obtained following the next steps:
   note that you have to know which version installer corresponds to (for instance `1.1.0`).
   * You can also ask somebody who has access to AWS bucket (for instance DevOps) give you direct link and download it then.
 
+### Recommendations and hacks
+* If something went wrong and Daedalus failed to run, you can look at logs in `~/Library/Application Support/Daedalus/Logs` under MacOS (note that `~/Library` folder is hidden by default) and in `C:\Users\<USER-NAME>\AppData\Roaming\Daedalus\Logs` under Windows.
+* Sometimes Daedalus is closed due to error earlier than it has time to write something to logs. 
+  You can see the error in console if run `/Applications/Daedalus.app/Contents/MacOS/Daedalus` from console under MacOS and `C:\\Program Files\Daedalus\daedalus.bat` under Windows.
+* If your goal is to install Daedalus on your machine, but you can't build installer due to some obscure reason, you can take installer 
+  needed version from somewhere (for instance from [daedaluswallet.io](https://daedaluswallet.io/#download)), install it and replace `configuration.yaml`, `wallet-topology.yaml` with files for your cluster. Also don't forget specify valid parameters in execution scripts (`Daedalus` under MacOS and `daedalus.bat` under Windows). 
+  All necessary files are in `/Applications/Daedalus.app/Contents/MacOS/` under MacOS and in `C:\\Program Files\Daedalus` under Windows.
+* Don't forget to delete all files between reinstalations: `~/Library/Application Support/Daedalus` and `C:\Users\<USER-NAME>\AppData\Roaming\Daedalus\`.
