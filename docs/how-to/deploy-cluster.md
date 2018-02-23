@@ -110,9 +110,12 @@ wait for a build for this commit and then follow the next steps.
 #### Configure Daedalus installers
 After build from the previous step is ready, you should proceed the following actions for daedalus repository:
 1. Create new branch for your installers.
+
+   The branch should be based on a version of Daedalus which you want installers to be prepared for.
 2. Specify in `.buildkite/pipeline.yml` and `appveyor.yml` branch of cardano-sl repository which `cardano-node` will be taken from.
 
    This branch should be branch from the previous step and should contain added configurations.
+   Make sure that backed API compatiable with Daedalus frontend, [this page](https://github.com/input-output-hk/internal-documentation/wiki/Daedalus-installer-history) may be useful. It reflects  correspondence between cardano revisions and Daedalus revisions.
    
    In `appveyor.yml` in [this line](https://github.com/input-output-hk/daedalus/blob/release/0.9.0/appveyor.yml#L26)
    you should specify your branch instead of `release/1.1.0`.
