@@ -159,21 +159,7 @@ After build from the previous step is ready, you should proceed the following ac
 Example of all changes you can find [here](https://github.com/input-output-hk/daedalus/commit/0f9eb4140eb9bd57f974878ac648bce349d824c2).
    
 ### How to download installers
-Installer for Windows may be obtained following the next steps:
-1. Click by green check mark near commit in daedalus repository
-2. Click by "Details" link near AppVeyor continious integration. You should get to AppVeyor build page.
-3. Go to "ARTIFACTS" tab (most right tab)
-4. Click by "installers\daedalus-win64-{BUILD}-installer.exe" link, downloading of installer must start
-
-Installer for MacOS can be obtained following the next steps:
-1. Click by green check mark near commit in daedalus repository
-2. Remember a number of build near BuildKite continious integration. It looks like "Build #206 passed", you should remember 206.
-3. There are several ways to get installer depending on whether you have access to AWS console or not:
-  * If you do, you can go to `ci-output-sink` S3 bucket, then to `csl-daedalus` folder, then sort all installers by "Last modified" and download corresponding to remembered build.
-  * If you don't, you can try to download it using direct link
-  `http://ci-output-sink.s3-eu-west-1.amazonaws.com/csl-daedalus/Daedalus-installer-{VERSION}.{BUILD}.pkg`, 
-  note that you have to know which version installer corresponds to (for instance `1.1.0`).
-  * You can also ask somebody who has access to AWS bucket (for instance DevOps) give you direct link and download it then.
+Follow [this](https://github.com/input-output-hk/internal-documentation/wiki/Daedalus#q-where-can-i-find-built-installers) instruction.
 
 ### Recommendations and hacks
 * If something went wrong and Daedalus failed to run, you can look at logs in `~/Library/Application Support/Daedalus/Logs` under MacOS (note that `~/Library` folder is hidden by default) and in `C:\Users\<USER-NAME>\AppData\Roaming\Daedalus\Logs` under Windows.
