@@ -8,6 +8,8 @@ module Pos.Diffusion.Types
     ) where
 
 import           Universum
+
+import           Control.Concurrent.STM           (TChan)
 import           Formatting                       (Format)
 import           Pos.Communication.Types.Protocol (NodeId)
 import           Pos.Core.Block                   (Block, BlockHeader, MainBlockHeader)
@@ -29,6 +31,10 @@ data Diffusion m = Diffusion
                          -> BlockHeader
                          -> [HeaderHash]
                          -> m (OldestFirst [] Block)
+    , streamBlocks       :: NodeId
+                         -> BlockHeader
+                         -> [HeaderHash]
+                         -> m (TChan Block)
       -- | This is needed because there's a security worker which will request
       -- tip-of-chain from the network if it determines it's very far behind.
       -- This type is chosen so that it fits with the current implementation:
@@ -87,6 +93,7 @@ dummyDiffusionLayer = DiffusionLayer
     dummyDiffusion :: Applicative m => Diffusion m
     dummyDiffusion = Diffusion
         { getBlocks          = \_ _ _ -> pure (OldestFirst [])
+        , streamBlocks       = \_ _ _ -> error "KK XXX"
         , requestTip         = \_ -> pure mempty
         , announceBlockHeader = \_ -> pure ()
         , sendTx             = \_ -> pure True

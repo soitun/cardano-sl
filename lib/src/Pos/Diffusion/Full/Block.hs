@@ -7,12 +7,13 @@ module Pos.Diffusion.Full.Block
     , requestTip
     , announceBlockHeader
     , handleHeadersCommunication
-
+    , streamBlocks
     , blockListeners
     ) where
 
 import           Universum
 
+import qualified Control.Concurrent.STM as Conc
 import           Control.Exception.Safe (Exception (..))
 import           Control.Lens (to)
 import           Control.Monad.Except (ExceptT, runExceptT, throwError)
@@ -23,6 +24,7 @@ import qualified Data.Text.Buildable as B
 import           Data.Time.Units (toMicroseconds)
 import           Formatting (bprint, build, int, sformat, shown, stext, (%))
 import qualified Network.Broadcast.OutboundQueue as OQ
+import           Mockable.Concurrent (fork)
 import           Serokell.Util.Text (listJson)
 import           System.Wlog (logDebug, logWarning)
 
@@ -273,6 +275,135 @@ getBlocks logic enqueue nodeId tipHeader checkpoints = do
                   throwError $ sformat ("Peer failed to produce block #"%int%": "%stext) i t
               Just (MsgBlock block) -> do
                   retrieveBlocksDo conv (i - 1) (block : acc)
+
+-- | Create a TChan that can be used to stream blocks from a peer.
+streamBlocks
+    :: forall d .
+       ( DiffusionWorkMode d
+       , HasAdoptedBlockVersionData d
+       )
+    => Logic d
+    -> EnqueueMsg d
+    -> NodeId
+    -> BlockHeader
+    -> [HeaderHash]
+    -> d (Conc.TChan Block)
+streamBlocks _ enqueue nodeId tipHeader _ = do
+    blockChan <- atomically $ Conc.newTChan
+    -- XXX Implement support for fetching a list of BlockHeaders too.
+    requestBlocks blockChan (NewestFirst (one tipHeader))
+    return blockChan
+  where
+
+    -- | Make message which requests chain of blocks which is based on our
+    -- tip. LcaChild is the first block after LCA we don't
+    -- know. WantedBlock is the newest one we want to get.
+    mkBlocksRequest :: HeaderHash -> HeaderHash -> MsgGetBlocks
+    mkBlocksRequest lcaChild wantedBlock =
+        MsgGetBlocks
+        { mgbFrom = lcaChild
+        , mgbTo = wantedBlock
+        }
+
+    requestBlocks :: Conc.TChan Block -> NewestFirst NE BlockHeader -> d ()
+    requestBlocks blockChan headers = enqueueMsgSingle
+        enqueue
+        (MsgRequestBlocks (S.singleton nodeId))
+        (Conversation $ requestBlocksConversation blockChan headers)
+
+    segmentSize = 64 :: Word -- XXX
+
+    requestBlocksConversation
+        :: Conc.TChan Block
+        -> NewestFirst NE BlockHeader
+        -> ConversationActions MsgGetBlocks MsgBlock d
+        -> d ()
+    requestBlocksConversation blockChan headers conv = do
+        -- Preserved behaviour from existing logic code: all of the headers
+        -- except for the first and last are tossed away.
+        -- TODO don't be so wasteful [CSL-2148]
+        let headers' = toOldestFirst headers
+        let segs = segmentsOfSize segmentSize $ headers' ^. _OldestFirst
+        _ <- fork (retrieveBlocks blockChan conv segs 0)
+        return ()
+
+    -- A piece of the block retrieval conversation in which the blocks are
+    -- pulled in one-by-one.
+    retrieveBlocks
+        :: Conc.TChan Block
+        -> ConversationActions MsgGetBlocks MsgBlock d
+        -> [(BlockHeader, BlockHeader)]
+        -> Word
+        -> d ()
+    retrieveBlocks _ _ [] 0 = return ()
+    retrieveBlocks blockChan conv [] outStandingReq = do
+        block <- retrieveBlock conv
+        atomically $ Conc.writeTChan blockChan block
+        retrieveBlocks blockChan conv [] (outStandingReq - 1)
+    retrieveBlocks blockChan conv (seg:segs) outStandingReq = do
+        (segs',osq) <- if outStandingReq < segmentSize `div` 2
+                          then do
+                              let (oldestHeader, newestHeader) = seg
+                                  newestHash = headerHash newestHeader
+                                  lcaChildHash = headerHash oldestHeader
+                              logDebug $ sformat ("Requesting blocks from "%shortHashF%" to "%shortHashF) lcaChildHash newestHash
+                              send conv $ mkBlocksRequest lcaChildHash newestHash
+                              return $ (NE.tail (seg :| segs), outStandingReq + segmentSize - 1)
+                    else return (segs, outStandingReq - 1)
+        block <- retrieveBlock conv
+        atomically $ Conc.writeTChan blockChan block
+        retrieveBlocks blockChan conv segs' osq
+
+    retrieveBlock
+        :: ConversationActions MsgGetBlocks MsgBlock d
+        -> d Block
+    retrieveBlock conv = do
+        chainE <- runExceptT (retrieveBlockDo conv)
+        case chainE of
+            Left e -> do
+                let msg = sformat ("Error retrieving blocks from peer: "%build% " "%stext) nodeId e
+                logWarning msg
+                throwM $ DialogUnexpected msg
+            Right block -> return block
+
+    -- Content of retrieveBlocks.
+    -- Receive a given number of blocks. If the server doesn't send this
+    -- many blocks, an error will be given.
+    --
+    -- Copied from the old logic but modified to use an accumulator rather
+    -- than fmapping (<|). That changed the order so we're now NewestFirst
+    -- (presumably the server sends them oldest first, as that assumption was
+    -- required for the old version to correctly say OldestFirst).
+    retrieveBlockDo
+        :: ConversationActions MsgGetBlocks MsgBlock d
+        -> ExceptT Text d Block
+    retrieveBlockDo conv = lift (recvLimited conv) >>= \case
+              Nothing ->
+                  throwError $ sformat ("Block retrieval cut short by peer")
+              Just (MsgNoBlock t) ->
+                  throwError $ sformat ("Peer failed to produce block, "%stext) t
+              Just (MsgBlock block) -> return block
+
+
+-- | Get the element at a given index (0-indexed) and the remainder of the
+-- list. If the index is bigger than the list, you get the last element and [].
+takeAtNE :: Word -> NonEmpty a -> (a, [a])
+takeAtNE 0 (a :| rest)       = (a, rest)
+takeAtNE _ (a :| [])         = (a, [])
+takeAtNE n (_ :| (a : rest)) = takeAtNE (n-1) (a :| rest)
+
+-- | takeAtNE but give the first element as well.
+takeAtFirstNE :: Word -> NonEmpty a -> (a, a, [a])
+takeAtFirstNE until (a :| rest) =
+    let (a', as) = takeAtNE until (a :| rest)
+    in  (a, a', as)
+
+segmentsOfSize :: Word -> NonEmpty a -> [(a, a)]
+segmentsOfSize n ne = (first_, last) : case rest of
+    [] -> []
+    (x : xs) -> segmentsOfSize n (x :| xs)
+  where
+    (first_, last, rest) = takeAtFirstNE n ne
 
 requestTip
     :: forall d t .
