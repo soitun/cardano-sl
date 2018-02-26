@@ -26,7 +26,7 @@ The next step is you need to prepare branch and configuration for deploy.
 For example you want to deploy release branch with smaller `k`, 
 then you must create new branch based on this release one and modify `devnet` configuration in `lib/configuration.yaml` in this branch.
 Sometimes you will need to create your own configuration, however,
-most likely it will be enough to modify existed `devnet` configuration.
+most likely it will be enough to modify existing `devnet` configuration.
 Then you should push your branch on github.
 
 ### Creation of tmux session
@@ -60,8 +60,8 @@ So essentially it's backend for Daedalus frontend.
 
 When you open Daedalus on your machine `launcher` is launched and it launches `cardano-node` and Daedalus frontend which uses provided API.
 So installer contains all these three parts.
-`cardano-node` comes from [cardano-sl repository](https://github.com/input-output-hk/cardano-sl), 
-`launcher` and Daedalus fronted come from [daedalus repository](https://github.com/input-output-hk/daedalus).
+`cardano-node` and `launcher` come from [cardano-sl repository](https://github.com/input-output-hk/cardano-sl), 
+Daedalus fronted comes from [daedalus repository](https://github.com/input-output-hk/daedalus).
 
 ### How to build installers
 Preparing installers implies that cluster which Daedalus will connect to is already deployed.
