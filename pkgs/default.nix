@@ -2265,8 +2265,8 @@ inherit (pkgs.xorg) libXrender;};
            version = "0.14.2";
            src = fetchgit {
              url = "https://github.com/serokell/acid-state.git";
-             sha256 = "1l19g73680g1fc7v22f2d54y8db4vhdwfmqchshf5pzv3nlxm640";
-             rev = "aa0b0e9192f427158108e63c06d09dce9c910b88";
+             sha256 = "19q7lxqwk3s6v6n6ck7xz0flff8cpk2pchrgz4hssmv3w8yd4bbr";
+             rev = "9a8af2440d655e14b802639b0b363be2ffb5a32a";
            };
            libraryHaskellDepends = [
              array base bytestring cereal containers directory
@@ -6900,11 +6900,11 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-report-server";
-           version = "0.4.6";
+           version = "0.4.7";
            src = fetchgit {
              url = "https://github.com/input-output-hk/cardano-report-server.git";
-             sha256 = "0mvxq15p1qgb6gp2x4s24g97nxams7k5x8sdycq4k3rc2j362iw5";
-             rev = "54b2fc0972b34b91a906f65eb22c20245e129a01";
+             sha256 = "1f66w67s2b43bzdjxqmxgil7xs2kk11yb60mmr3iaycv8zvg1s1a";
+             rev = "c6e2474ef7703a46e1e645d1e3b6136c8f31310b";
            };
            isLibrary = true;
            isExecutable = true;
@@ -6948,7 +6948,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../lib;
            libraryHaskellDepends = [
              aeson ansi-terminal ansi-wl-pprint base binary bytestring
@@ -6985,7 +6985,7 @@ inherit (pkgs) mesa;};
            license = stdenv.lib.licenses.mit;
          }) {};
       "cardano-sl-auxx" = callPackage
-        ({ mkDerivation, ansi-wl-pprint, async, base, bytestring
+        ({ mkDerivation, aeson, ansi-wl-pprint, async, base, bytestring
          , canonical-json, cardano-sl, cardano-sl-block, cardano-sl-client
          , cardano-sl-core, cardano-sl-crypto, cardano-sl-db
          , cardano-sl-generator, cardano-sl-infra, cardano-sl-networking
@@ -7002,13 +7002,13 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-auxx";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../auxx;
            isLibrary = true;
            isExecutable = true;
            libraryHaskellDepends = [
-             ansi-wl-pprint async base bytestring canonical-json cardano-sl
-             cardano-sl-block cardano-sl-client cardano-sl-core
+             aeson ansi-wl-pprint async base bytestring canonical-json
+             cardano-sl cardano-sl-block cardano-sl-client cardano-sl-core
              cardano-sl-crypto cardano-sl-db cardano-sl-generator
              cardano-sl-infra cardano-sl-networking cardano-sl-ssc
              cardano-sl-txp cardano-sl-update cardano-sl-util conduit
@@ -7047,7 +7047,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-binary";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../binary;
            libraryHaskellDepends = [
              autoexporter base binary bytestring cborg conduit containers digest
@@ -7078,7 +7078,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-block";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../block;
            libraryHaskellDepends = [
              aeson base bytestring cardano-sl-binary cardano-sl-core
@@ -7109,7 +7109,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-client";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../client;
            libraryHaskellDepends = [
              base cardano-sl cardano-sl-block cardano-sl-core cardano-sl-crypto
@@ -7148,7 +7148,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-core";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../core;
            libraryHaskellDepends = [
              aeson ansi-terminal autoexporter base base58-bytestring binary
@@ -7179,7 +7179,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-crypto";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../crypto;
            libraryHaskellDepends = [
              aeson autoexporter base binary bytestring cardano-crypto
@@ -7205,7 +7205,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-db";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../db;
            libraryHaskellDepends = [
              base bytestring cardano-sl-binary cardano-sl-core cardano-sl-crypto
@@ -7231,7 +7231,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-delegation";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../delegation;
            libraryHaskellDepends = [
              aeson base cardano-sl-binary cardano-sl-core cardano-sl-crypto
@@ -7265,7 +7265,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-explorer";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../explorer;
            isLibrary = true;
            isExecutable = true;
@@ -7318,7 +7318,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-generator";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../generator;
            libraryHaskellDepends = [
              base bytestring cardano-sl cardano-sl-block cardano-sl-client
@@ -7360,7 +7360,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-infra";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../infra;
            libraryHaskellDepends = [
              aeson base base64-bytestring bytestring cardano-report-server
@@ -7389,7 +7389,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-lrc";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../lrc;
            libraryHaskellDepends = [
              base bytestring cardano-sl-binary cardano-sl-core cardano-sl-crypto
@@ -7416,7 +7416,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-networking";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../networking;
            isLibrary = true;
            isExecutable = true;
@@ -7451,7 +7451,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-node";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../node;
            isLibrary = false;
            isExecutable = true;
@@ -7478,7 +7478,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-ssc";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../ssc;
            libraryHaskellDepends = [
              aeson array base bytestring cardano-sl-binary cardano-sl-core
@@ -7514,7 +7514,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-tools";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../tools;
            isLibrary = false;
            isExecutable = true;
@@ -7552,7 +7552,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-txp";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../txp;
            libraryHaskellDepends = [
              aeson base bytestring cardano-sl-binary cardano-sl-core
@@ -7584,7 +7584,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-update";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../update;
            libraryHaskellDepends = [
              aeson base bytestring Cabal cardano-sl-binary cardano-sl-core
@@ -7617,7 +7617,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-util";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../util;
            libraryHaskellDepends = [
              aeson autoexporter base bytestring cardano-sl-networking cborg
@@ -7654,7 +7654,7 @@ inherit (pkgs) mesa;};
          }:
          mkDerivation {
            pname = "cardano-sl-wallet";
-           version = "1.0.3";
+           version = "1.1.0";
            src = ./../wallet;
            isLibrary = true;
            isExecutable = true;
@@ -24758,8 +24758,8 @@ inherit (pkgs) which;};
          }) {};
       "log-warper" = callPackage
         ({ mkDerivation, aeson, ansi-terminal, base, containers, deepseq
-         , directory, dlist, errors, exceptions, extra, filepath, fmt
-         , formatting, hashable, lens, markdown-unlit, mmorph, monad-control
+         , directory, dlist, errors, exceptions, extra, fetchgit, filepath
+         , fmt, formatting, hashable, lens, mmorph, monad-control
          , monad-loops, mtl, network, stdenv, text, text-format, time
          , transformers, transformers-base, universum, unix
          , unordered-containers, vector, yaml
@@ -24767,18 +24767,17 @@ inherit (pkgs) which;};
          mkDerivation {
            pname = "log-warper";
            version = "1.8.0";
-           sha256 = "370274f1420405e34e135dfcb73b6ed90dd2d6f8704d3c25811baa43a27db32c";
-           isLibrary = true;
-           isExecutable = true;
+           src = fetchgit {
+             url = "https://github.com/serokell/log-warper.git";
+             sha256 = "1rqpkid2c58pk813kb7wjcibsxf97cn7vjf3bv3dma1k5b818ana";
+             rev = "7f95c6990ef93a289678755cb1db71c2a4ecdfb5";
+           };
            libraryHaskellDepends = [
              aeson ansi-terminal base containers deepseq directory dlist errors
              exceptions extra filepath fmt formatting hashable lens mmorph
              monad-control monad-loops mtl network text text-format time
              transformers transformers-base universum unix unordered-containers
              vector yaml
-           ];
-           executableHaskellDepends = [
-             base exceptions markdown-unlit text universum yaml
            ];
            doHaddock = false;
            doCheck = false;
