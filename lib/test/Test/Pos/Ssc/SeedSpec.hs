@@ -22,7 +22,7 @@ import           Test.QuickCheck.Property (failed, succeeded)
 
 import           Pos.Binary
 import           Pos.Core (AddressHash, HasConfiguration, SharedSeed (..), StakeholderId,
-                           addressHash, mkCoin)
+                           addressHash, mkCoin, protocolMagic)
 import           Pos.Core.Ssc (Commitment (..), CommitmentsMap, Opening (..), getCommShares,
                                getCommitmentsMap, mkCommitmentsMap)
 import           Pos.Crypto (DecShare, PublicKey, SecretKey, SignTag (SignCommitment), Threshold,
@@ -218,7 +218,7 @@ mkCommitmentsMap' keys comms =
     mkCommitmentsMap $ do
         (sk, comm) <- zip keys comms
         let epochIdx = 0  -- we don't care here
-        let sig = sign SignCommitment sk (epochIdx, comm)
+        let sig = sign protocolMagic SignCommitment sk (epochIdx, comm)
         return (toPublic sk, comm, sig)
 
 mkVssMap :: [SecretKey]

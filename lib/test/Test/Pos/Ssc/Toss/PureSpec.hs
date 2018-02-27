@@ -24,10 +24,10 @@ import qualified Pos.Ssc.Toss.Class                as Toss
 import qualified Pos.Ssc.Toss.Pure                 as Toss
 import qualified Pos.Ssc.Types                     as Toss
 
-import           Test.Pos.Configuration (withDefConfiguration)
+import           Test.Pos.Configuration (HasConfigurations)
 
-spec :: Spec
-spec = withDefConfiguration $ describe "Toss" $ do
+spec :: HasConfigurations => Spec
+spec = describe "Toss" $ do
     let smaller n = modifyMaxSuccess (const n)
     describe "PureToss" $ smaller 30 $ do
         prop "Adding and deleting a signed commitment in the 'PureToss' monad is the\

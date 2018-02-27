@@ -20,11 +20,11 @@ import           Test.QuickCheck (Property, arbitrary, counterexample, (==>))
 
 import           Pos.Arbitrary.Txp (BadSigsTx (..), DoubleInputTx (..), GoodTx (..))
 import           Pos.Core (HasConfiguration, addressHash, checkPubKeyAddress, makePubKeyAddressBoot,
-                           makeScriptAddress, mkCoin, sumCoins)
+                           makeScriptAddress, mkCoin, sumCoins, protocolMagic)
 import           Pos.Core.Txp (Tx (..), TxAux (..), TxIn (..), TxInWitness (..), TxOut (..),
                                TxOutAux (..), TxSigData (..), TxWitness, isTxInUnknown)
-import           Pos.Crypto (SignTag (SignTx), checkSig, fakeSigner, hash, toPublic, unsafeHash,
-                             withHash)
+import           Pos.Crypto (SignTag (SignTx), checkSig, fakeSigner,
+                             hash, toPublic, unsafeHash, withHash)
 import           Pos.Data.Attributes (mkAttributes)
 import           Pos.Script (PlutusError (..), Script)
 import           Pos.Script.Examples (alwaysSuccessValidator, badIntRedeemer, goodIntRedeemer,
@@ -37,14 +37,14 @@ import           Pos.Txp (MonadUtxoRead (utxoGet), ToilVerFailure (..), Utxo, VT
 import           Pos.Util (SmallGenerator (..), nonrepeating, runGen)
 import           Pos.Util.QuickCheck.Property (qcIsLeft, qcIsRight)
 
-import           Test.Pos.Configuration (withDefConfiguration)
+import           Test.Pos.Configuration (HasConfigurations)
 
 ----------------------------------------------------------------------------
 -- Spec
 ----------------------------------------------------------------------------
 
-spec :: Spec
-spec = withDefConfiguration $ describe "Txp.Toil.Utxo" $ do
+spec :: HasConfigurations => Spec
+spec = describe "Txp.Toil.Utxo" $ do
     describe "utxoGet @((->) Utxo)" $ do
         it "returns Nothing when given empty Utxo" $
             isNothing (utxoGet myTx (mempty @Utxo))
@@ -194,7 +194,7 @@ signatureIsValid tx (PkWitness{..}, Just TxOutAux{..}) =
     let txSigData = TxSigData
             { txSigTxHash = hash tx }
     in checkPubKeyAddress twKey (txOutAddress toaOut) &&
-       checkSig SignTx twKey txSigData twSig
+       checkSig protocolMagic SignTx twKey txSigData twSig
 signatureIsValid _ _ = False
 
 signatureIsNotValid

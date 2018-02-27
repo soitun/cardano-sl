@@ -11,11 +11,11 @@ import           Pos.Arbitrary.Block ()
 import qualified Pos.Core.Block as BT
 import           Pos.SafeCopy ()
 
+import           Test.Pos.Configuration (HasConfigurations)
 import           Test.Pos.Helpers (safeCopyTest)
-import           Test.Pos.Configuration (withDefConfiguration)
 
-spec :: Spec
-spec = withDefConfiguration $ describe "Block types" $ do
+spec :: HasConfigurations => Spec
+spec = describe "Block types" $ do
     describe "SafeCopy instances" $ do
         describe "GenericBlockHeader" $ do
             describe "GenesisBlockHeader" $ do

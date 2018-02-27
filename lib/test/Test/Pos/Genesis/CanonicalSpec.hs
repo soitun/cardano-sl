@@ -14,10 +14,10 @@ import           Pos.Core.Genesis (GenesisAvvmBalances, GenesisData, GenesisDele
                                    GenesisWStakeholders, ProtocolConstants)
 
 import           Test.Pos.Helpers (canonicalJsonTest)
-import           Test.Pos.Configuration (withDefConfiguration)
+import           Test.Pos.Configuration (HasConfigurations)
 
-spec :: Spec
-spec = withDefConfiguration $ describe "Genesis" $ modifyMaxSuccess (const 10) $ do
+spec :: HasConfigurations => Spec
+spec = describe "Genesis" $ modifyMaxSuccess (const 10) $ do
     describe "Canonical encoding" $ do
         canonicalJsonTest @ProtocolConstants
         canonicalJsonTest @GenesisAvvmBalances

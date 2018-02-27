@@ -17,18 +17,18 @@ import           Test.QuickCheck.Arbitrary.Generic (genericArbitrary, genericShr
 import           Pos.Core (ApplicationName, BlockVersion (..), BlockVersionData (..),
                            HasConfiguration, SoftwareVersion (..), StakeholderId, addressHash)
 import           Pos.Core.Update (UpId, UpdateProposal (..))
-import           Pos.Crypto (hash)
+import           Pos.Crypto (ProtocolMagic, hash)
 import           Pos.Slotting.Types (SlottingData)
 import           Pos.Update.BlockVersion (applyBVM)
 import qualified Pos.Update.Poll as Poll
 import qualified Pos.Util.Modifier as MM
 import           Pos.Util.QuickCheck.Property (formsMonoid)
 
-import           Test.Pos.Configuration (withDefConfiguration)
+import           Test.Pos.Configuration (HasConfigurations)
 import           Test.Pos.Helpers ()
 
-spec :: Spec
-spec = withDefConfiguration $ describe "Poll" $ do
+spec :: HasConfigurations => Spec
+spec = describe "Poll" $ do
     let smaller n = modifyMaxSuccess (const n)
     describe "modifyPollModifier" $ smaller 30 $ do
         prop
@@ -88,7 +88,7 @@ data PollAction
     | SetEpochProposers (HashSet StakeholderId)
     deriving (Show, Eq, Generic)
 
-instance HasConfiguration => Arbitrary PollAction where
+instance Arbitrary ProtocolMagic => Arbitrary PollAction where
     arbitrary = genericArbitrary
     shrink = genericShrink
 

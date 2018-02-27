@@ -16,17 +16,23 @@ module Test.Pos.Configuration
        , withDefDlgConfiguration
        , withDefConfigurations
        , withStaticConfigurations
+
+       , HasConfigurations
        ) where
 
 import           Universum
 
 import qualified Data.Aeson as J
+import           Test.QuickCheck (Arbitrary (..))
 
 import           Pos.Block.Configuration (HasBlockConfiguration, withBlockConfiguration)
 import           Pos.Configuration (HasNodeConfiguration, withNodeConfiguration)
-import           Pos.Core (BlockVersionData, HasConfiguration, withGenesisSpec)
+import           Pos.Core (BlockVersionData, HasConfiguration, withGenesisSpec, protocolMagic,
+                           GenesisHash (..), genesisHash, VssMinTTL (..), vssMinTTL,
+                           VssMaxTTL (..), vssMaxTTL)
 import           Pos.Core.Configuration (CoreConfiguration (..), GenesisConfiguration (..))
 import           Pos.Core.Genesis (GenesisSpec (..))
+import           Pos.Crypto (ProtocolMagic)
 import           Pos.Delegation (HasDlgConfiguration, withDlgConfiguration)
 import           Pos.Infra.Configuration (HasInfraConfiguration, withInfraConfiguration)
 import           Pos.Launcher.Configuration (Configuration (..), HasConfigurations)
@@ -35,6 +41,17 @@ import           Pos.Txp (HasTxpConfiguration, withTxpConfiguration)
 import           Pos.Update.Configuration (HasUpdateConfiguration, withUpdateConfiguration)
 import           Pos.Util.Config (embedYamlConfigCT)
 
+instance HasConfiguration => Arbitrary ProtocolMagic where
+    arbitrary = pure protocolMagic
+
+instance HasConfiguration => Arbitrary GenesisHash where
+    arbitrary = pure (GenesisHash genesisHash)
+
+instance HasConfiguration => Arbitrary VssMinTTL where
+    arbitrary = pure (VssMinTTL vssMinTTL)
+
+instance HasConfiguration => Arbitrary VssMaxTTL where
+    arbitrary = pure (VssMaxTTL vssMaxTTL)
 
 -- | This configuration is embedded into binary and is used by default
 -- in tests.
