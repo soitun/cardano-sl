@@ -119,7 +119,10 @@ getAccountMod
 getAccountMod balAndUtxo accMod accId = do
     logInfo $ sformat ("getAccountMod: Account " % build % " has accMod: " % build) accId accMod
     dbAddrs    <- getAccountAddrsOrThrow Existing (NeedSorting True) accId
+    logInfo $ sformat ("getAccountMod: dbAddrs count: " % build) $ length dbAddrs
     let allAddrIds = gatherAddresses (camAddresses accMod) dbAddrs
+    logInfo $ sformat ("getAccountMod: allAddrIds (dbAddrd + unknownMemAddrs) count: " % build)
+            $ length allAddrIds
     logDebug "getAccountMod: gathering info about addresses.."
     allAddrs <- mapM (getWAddress balAndUtxo accMod) allAddrIds
     logDebug "getAccountMod: info about addresses gathered"
