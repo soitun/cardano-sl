@@ -3,9 +3,8 @@ import           Universum
 import           Test.Hspec (hspec)
 
 import           Spec (spec)
-import           Test.Pos.Configuration (defaultTestConf)
 
-import           Test.Pos.Configuration (withDefConfigurations)
+import           Test.Pos.Configuration (defaultTestConf, withDefConfigurations)
 
 main :: IO ()
 main = do
