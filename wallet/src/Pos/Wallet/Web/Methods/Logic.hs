@@ -127,7 +127,10 @@ getAccountMod
 getAccountMod ws accMod accId = do
     logInfo $ sformat ("getAccountMod: Account " % build % " has accMod: " % build) accId accMod
     dbAddrs    <- map adiCWAddressMeta . sortOn adiSortingKey <$> getAccountAddrsOrThrow ws Existing accId
+    logInfo $ sformat ("getAccountMod: dbAddrs count: " % build) $ length dbAddrs
     let allAddrIds = gatherAddresses (camAddresses accMod) dbAddrs
+    logInfo $ sformat ("getAccountMod: allAddrIds (dbAddrd + unknownMemAddrs) count: " % build)
+            $ length allAddrIds
     allAddrs <- mapM (getWAddress ws accMod) allAddrIds
     balance <- mkCCoin . unsafeIntegerToCoin . sumCoins <$>
                mapM (decodeCTypeOrFail . cadAmount) allAddrs
