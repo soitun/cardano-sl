@@ -9,7 +9,7 @@ module Pos.Diffusion.Types
 
 import           Universum
 
-import           Control.Concurrent.STM           (TChan)
+import           Control.Concurrent.STM           (TBQueue)
 import           Formatting                       (Format)
 import           Pos.Communication.Types.Protocol (NodeId)
 import           Pos.Core.Block                   (Block, BlockHeader, MainBlockHeader)
@@ -31,10 +31,13 @@ data Diffusion m = Diffusion
                          -> BlockHeader
                          -> [HeaderHash]
                          -> m (OldestFirst [] Block)
-    , streamBlocks       :: NodeId
+    , streamBlocks       :: forall t .
+                            ( Monoid t)
+                         => NodeId
                          -> BlockHeader
                          -> [HeaderHash]
-                         -> m (TChan Block)
+                         -> (TBQueue Block -> m t)
+                         -> m t
       -- | This is needed because there's a security worker which will request
       -- tip-of-chain from the network if it determines it's very far behind.
       -- This type is chosen so that it fits with the current implementation:

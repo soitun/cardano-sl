@@ -276,10 +276,10 @@ getBlocks logic enqueue nodeId tipHeader checkpoints = do
               Just (MsgBlock block) -> do
                   retrieveBlocksDo conv (i - 1) (block : acc)
 
--- | Create a TChan that can be used to stream blocks from a peer.
 streamBlocks
-    :: forall d .
-       ( DiffusionWorkMode d
+    :: forall d t .
+       ( Monoid t
+       , DiffusionWorkMode d
        , HasAdoptedBlockVersionData d
        )
     => Logic d
@@ -287,12 +287,13 @@ streamBlocks
     -> NodeId
     -> BlockHeader
     -> [HeaderHash]
-    -> d (Conc.TChan Block)
-streamBlocks _ enqueue nodeId tipHeader _ = do
-    blockChan <- atomically $ Conc.newTChan
+    -> (Conc.TBQueue Block -> d t)
+    -> d t
+streamBlocks _ enqueue nodeId tipHeader _ k = do
+    blockChan <- atomically $ Conc.newTBQueue $ fromIntegral segmentSize
     -- XXX Implement support for fetching a list of BlockHeaders too.
     requestBlocks blockChan (NewestFirst (one tipHeader))
-    return blockChan
+    k blockChan
   where
 
     -- | Make message which requests chain of blocks which is based on our
@@ -305,7 +306,7 @@ streamBlocks _ enqueue nodeId tipHeader _ = do
         , mgbTo = wantedBlock
         }
 
-    requestBlocks :: Conc.TChan Block -> NewestFirst NE BlockHeader -> d ()
+    requestBlocks :: Conc.TBQueue Block -> NewestFirst NE BlockHeader -> d ()
     requestBlocks blockChan headers = enqueueMsgSingle
         enqueue
         (MsgRequestBlocks (S.singleton nodeId))
@@ -314,7 +315,7 @@ streamBlocks _ enqueue nodeId tipHeader _ = do
     segmentSize = 64 :: Word -- XXX
 
     requestBlocksConversation
-        :: Conc.TChan Block
+        :: Conc.TBQueue Block
         -> NewestFirst NE BlockHeader
         -> ConversationActions MsgGetBlocks MsgBlock d
         -> d ()
@@ -330,7 +331,7 @@ streamBlocks _ enqueue nodeId tipHeader _ = do
     -- A piece of the block retrieval conversation in which the blocks are
     -- pulled in one-by-one.
     retrieveBlocks
-        :: Conc.TChan Block
+        :: Conc.TBQueue Block
         -> ConversationActions MsgGetBlocks MsgBlock d
         -> [(BlockHeader, BlockHeader)]
         -> Word
@@ -338,7 +339,7 @@ streamBlocks _ enqueue nodeId tipHeader _ = do
     retrieveBlocks _ _ [] 0 = return ()
     retrieveBlocks blockChan conv [] outStandingReq = do
         block <- retrieveBlock conv
-        atomically $ Conc.writeTChan blockChan block
+        atomically $ Conc.writeTBQueue blockChan block
         retrieveBlocks blockChan conv [] (outStandingReq - 1)
     retrieveBlocks blockChan conv (seg:segs) outStandingReq = do
         (segs',osq) <- if outStandingReq < segmentSize `div` 2
@@ -351,7 +352,7 @@ streamBlocks _ enqueue nodeId tipHeader _ = do
                               return $ (NE.tail (seg :| segs), outStandingReq + segmentSize - 1)
                     else return (segs, outStandingReq - 1)
         block <- retrieveBlock conv
-        atomically $ Conc.writeTChan blockChan block
+        atomically $ Conc.writeTBQueue blockChan block
         retrieveBlocks blockChan conv segs' osq
 
     retrieveBlock

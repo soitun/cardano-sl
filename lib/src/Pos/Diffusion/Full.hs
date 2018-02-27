@@ -10,7 +10,7 @@ module Pos.Diffusion.Full
 import           Nub (ordNub)
 import           Universum
 
-import           Control.Concurrent.STM           (TChan)
+import           Control.Concurrent.STM           (TBQueue)
 import           Control.Monad.Fix (MonadFix)
 import qualified Data.Map as M
 import           Data.Time.Units (Millisecond, Second)
@@ -251,10 +251,13 @@ diffusionLayerFull networkConfig lastKnownBlockVersion transport mEkgNodeMetrics
                       -> d (OldestFirst [] Block)
             getBlocks = Diffusion.Block.getBlocks logic enqueue
 
-            streamBlocks :: NodeId
+            streamBlocks :: forall t .
+                            ( Monoid t)
+                      => NodeId
                       -> BlockHeader
                       -> [HeaderHash]
-                      -> d (TChan Block)
+                      -> (TBQueue Block -> d t)
+                      -> d t
             streamBlocks = Diffusion.Block.streamBlocks logic enqueue
 
             requestTip :: (BlockHeader -> NodeId -> d t) -> d (Map NodeId (d t))

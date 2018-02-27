@@ -9,7 +9,7 @@ module Pos.Block.Network.Retrieval
 import           Universum
 
 import           Control.Concurrent.STM (putTMVar, swapTMVar, tryReadTBQueue, tryReadTMVar,
-                                         tryTakeTMVar, readTChan)
+                                         tryTakeTMVar, readTBQueue)
 import           Control.Exception.Safe (handleAny)
 import           Control.Lens (to)
 import           Control.Monad.STM (retry)
@@ -292,7 +292,7 @@ getProcessBlocks diffusion nodeId desired checkpoints = do
           logDebug $ sformat
               ("Retrieved "%int%" blocks")
               (blocks ^. _OldestFirst . to NE.length)
-          handleBlocks nodeId blocks diffusion 
+          handleBlocks nodeId blocks diffusion
           -- If we've downloaded any block with bigger
           -- difficulty than ncRecoveryHeader, we're
           -- gracefully exiting recovery mode.
@@ -319,11 +319,14 @@ streamProcessBlocks
     -> [HeaderHash]
     -> m ()
 streamProcessBlocks diffusion nodeId desired checkpoints = do
-    blockChan <- Diffusion.streamBlocks diffusion nodeId desired checkpoints
-    loop blockChan
+    _ <- Diffusion.streamBlocks diffusion nodeId desired checkpoints (loop True)
+    return ()
   where
-      loop blockChan = do
-        block <- atomically $ readTChan blockChan
+    loop False _ = return ()
+    loop True blockChan = do
+        block <- atomically $ readTBQueue blockChan
         handleBlocks nodeId (OldestFirst (block :| [])) diffusion
-        loop blockChan
+        loop True blockChan
+
+
 
